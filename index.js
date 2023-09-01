@@ -1,9 +1,8 @@
 const canvas = document.querySelector("canvas");
-
 const c = canvas.getContext("2d");
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+canvas.width = 1024;
+canvas.height = 576;
 
 const gravity = 0.7;
 class Player {
@@ -30,26 +29,105 @@ class Player {
     this.position.y += this.velocity.y;
     if (this.position.y + this.height + this.velocity.y <= canvas.height)
       this.velocity.y += gravity;
-    else this.velocity.y = 0;
   }
 }
-
+function GameOver() {
+  console.log("lost");
+}
 class Platform {
-  constructor() {
+  constructor({ x, y, imageUrl }) {
     this.position = {
-      x: 200,
-      y: 100,
+      x,
+      y,
     };
+    this.image = new Image();
+    this.image.src = imageUrl;
     this.width = 200;
-    this.height = 20;
+    this.height = 30;
   }
   draw() {
-    c.fillStyle = "blue";
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+    c.drawImage(
+      this.image,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
   }
 }
+class GenericObject {
+  constructor({ x, y, imageUrl }) {
+    this.position = {
+      x,
+      y,
+    };
+    this.image = new Image();
+    this.image.src = imageUrl;
+    this.width = 2000;
+    this.height = 600;
+  }
+  draw() {
+    c.drawImage(
+      this.image,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
+  }
+}
+const genericObject = [
+  new GenericObject({ x: 0, y: 0, imageUrl: "./img/Background.jpeg" }),
+  new GenericObject({ x: 2000, y: 0, imageUrl: "./img/Background.jpeg" }),
+  new GenericObject({ x: 4000, y: 0, imageUrl: "./img/Background.jpeg" }),
+];
+
 const player = new Player();
-const platform = new Platform();
+//need to make every 3rd or 4th a double platform just need if statment on i like i % 3 === 0 plat gap = 190
+function mapGen() {
+  const platforms = [];
+  let prevX = 0;
+
+  for (let i = 0; i <= 50; i++) {
+    let randomGap;
+
+    do {
+      randomGap = Math.floor(Math.random() * (400 - 190 + 1)) + 190;
+    } while (randomGap >= 191 && randomGap <= 250);
+
+    if (randomGap - prevX <= 500) {
+      let x = prevX + randomGap;
+      platforms.push(
+        new Platform({
+          x: x,
+          y: 550,
+          imageUrl: "./img/Platform.jpeg",
+        })
+      );
+      prevX = x;
+    } else {
+      let x = prevX + 400;
+      platforms.push(
+        new Platform({
+          x: x,
+          y: 550,
+          imageUrl: "./img/Platform.jpeg",
+        })
+      );
+      prevX = x;
+    }
+  }
+
+  return platforms;
+}
+
+const platforms = [
+  new Platform({ x: -1, y: 550, imageUrl: "./img/Platform.jpeg" }),
+  new Platform({ x: 250, y: 550, imageUrl: "./img/Platform.jpeg" }),
+
+  ...mapGen(), // Use the spread operator to include the generated platforms individually
+];
+
 const keys = {
   right: {
     pressed: false,
@@ -58,65 +136,91 @@ const keys = {
     pressed: false,
   },
 };
+let scrollOffset = 0;
+
 function animate() {
   requestAnimationFrame(animate);
-  c.clearRect(0, 0, canvas.width, canvas.height);
+  c.fillStyle = "white";
+
+  c.fillRect(0, 0, canvas.width, canvas.height);
+  genericObject.forEach((genericObject) => {
+    genericObject.draw();
+  });
   player.update();
-  platform.draw();
-  if (keys.right.pressed) {
+  platforms.forEach((platform) => {
+    platform.draw();
+  });
+  if (keys.right.pressed && player.position.x < 600) {
     player.velocity.x = 5;
-  } else if (keys.left.pressed) {
+  } else if (keys.left.pressed && player.position.x > 100) {
     player.velocity.x = -5;
-  } else player.velocity.x = 0;
-  if (
-    player.position.y + player.height <= platform.position.y &&
-    player.position.y + player.height + player.velocity.y >=
-      platform.position.y &&
-    player.position.x + player.width >= platform.position.x &&
-    player.position.x <= platform.position.x + platform.width
-  ) {
-    player.velocity.y = 0;
+  } else {
+    player.velocity.x = 0;
+    if (keys.right.pressed) {
+      scrollOffset += 5;
+      platforms.forEach((platform) => {
+        platform.position.x -= 5;
+      });
+      genericObject.forEach((genericObject) => {
+        genericObject.position.x -= 2;
+      });
+    } else if (keys.left.pressed) {
+      scrollOffset -= 5;
+      platforms.forEach((platform) => {
+        platform.position.x += 5;
+      });
+      genericObject.forEach((genericObject) => {
+        genericObject.position.x += 2;
+      });
+    }
+  }
+  platforms.forEach((platform) => {
+    if (
+      player.position.y + player.height <= platform.position.y &&
+      player.position.y + player.height + player.velocity.y >=
+        platform.position.y &&
+      player.position.x + player.width >= platform.position.x &&
+      player.position.x <= platform.position.x + platform.width
+    ) {
+      player.velocity.y = 0;
+    }
+  });
+  if (scrollOffset > 2000) {
+    console.log("you win");
+  }
+  if (player.position.y > canvas.height) {
+    GameOver();
   }
 }
 animate();
 
 addEventListener("keydown", ({ keyCode }) => {
-  console.log(keyCode);
   switch (keyCode) {
     case 65:
-      console.log("this is left");
       keys.left.pressed = true;
       break;
     case 83:
-      console.log("this is down");
       break;
     case 68:
-      console.log("this is righ");
       keys.right.pressed = true;
       break;
     case 87:
-      console.log("this is up");
       player.velocity.y -= 8;
       break;
   }
 });
 addEventListener("keyup", ({ keyCode }) => {
-  console.log(keyCode);
   switch (keyCode) {
     case 65:
-      console.log("this is left");
       keys.left.pressed = false;
       break;
     case 83:
-      console.log("this is down");
       break;
     case 68:
-      console.log("this is righ");
       keys.right.pressed = false;
       break;
     case 87:
-      console.log("this is up");
-      player.velocity.y -= 20;
+      player.velocity.y -= 10;
       break;
   }
 });
