@@ -3,6 +3,8 @@ const c = canvas.getContext("2d");
 
 canvas.width = 1024;
 canvas.height = 576;
+let imageGen = 100;
+let imageGen2 = 195;
 
 const gravity = 0.7;
 class Player {
@@ -15,22 +17,42 @@ class Player {
       x: 0,
       y: 1,
     };
+    this.image = new Image();
+    this.image.src = "./img/NightBorne.jpeg";
     this.width = 30;
-    this.height = 30;
+    this.height = 40;
   }
 
   draw() {
-    c.fillStyle = "red";
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+    c.drawImage(
+      this.image,
+      imageGen,
+      imageGen2,
+      33,
+      28,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
   }
   update() {
+    this.detectPlayerMove();
     this.draw();
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
     if (this.position.y + this.height + this.velocity.y <= canvas.height)
       this.velocity.y += gravity;
   }
+
+  detectPlayerMove() {
+    if (this.velocity.x > 0) {
+      imageGen = 20;
+      imageGen2 = 35;
+    }
+  }
 }
+
 function GameOver() {
   console.log("lost");
 }
@@ -83,7 +105,6 @@ const genericObject = [
 ];
 
 const player = new Player();
-//need to make every 3rd or 4th a double platform just need if statment on i like i % 3 === 0 plat gap = 190
 
 function mapGen() {
   const platforms = [];
@@ -126,7 +147,7 @@ const platforms = [
   new Platform({ x: -1, y: 550, imageUrl: "./img/Platform.jpeg" }),
   new Platform({ x: 250, y: 550, imageUrl: "./img/Platform.jpeg" }),
 
-  ...mapGen(), // Use the spread operator to include the generated platforms individually
+  ...mapGen(),
 ];
 
 const keys = {
@@ -153,7 +174,10 @@ function animate() {
   });
   if (keys.right.pressed && player.position.x < 600) {
     player.velocity.x = 5;
-  } else if (keys.left.pressed && player.position.x > 100) {
+  } else if (
+    (keys.left.pressed && player.position.x > 100) ||
+    (keys.left.pressed && scrollOffset === 0 && player.position.x > 0)
+  ) {
     player.velocity.x = -5;
   } else {
     player.velocity.x = 0;
@@ -165,7 +189,7 @@ function animate() {
       genericObject.forEach((genericObject) => {
         genericObject.position.x -= 2;
       });
-    } else if (keys.left.pressed) {
+    } else if (keys.left.pressed && scrollOffset > 0) {
       scrollOffset -= 5;
       platforms.forEach((platform) => {
         platform.position.x += 5;
