@@ -84,6 +84,7 @@ const genericObject = [
 
 const player = new Player();
 //need to make every 3rd or 4th a double platform just need if statment on i like i % 3 === 0 plat gap = 190
+
 function mapGen() {
   const platforms = [];
   let prevX = 0;
