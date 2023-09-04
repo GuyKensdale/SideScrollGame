@@ -388,15 +388,15 @@ function animate() {
     wizard.draw();
   });
 
-  if (scrollOffset > 400 && scrollOffset < 800) {
+  if (scrollOffset > 4000 && scrollOffset < 8000) {
     level = 2;
     updateLevelDisplay();
   }
-  if (scrollOffset > 800 && scrollOffset < 1200) {
+  if (scrollOffset > 8000 && scrollOffset < 12000) {
     level = 3;
     updateLevelDisplay();
   }
-  if (scrollOffset > 1200 && scrollOffset < 2000) {
+  if (scrollOffset > 12000 && scrollOffset < 20000) {
     level = 4;
     updateLevelDisplay();
   }
