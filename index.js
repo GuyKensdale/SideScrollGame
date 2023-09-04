@@ -6,7 +6,7 @@ canvas.height = 576;
 let imageGen = 100;
 let imageGen2 = 195;
 
-const gravity = 0.7;
+const gravity = 0.9;
 class Player {
   constructor() {
     this.position = {
@@ -18,9 +18,9 @@ class Player {
       y: 1,
     };
     this.image = new Image();
-    this.image.src = "./img/NightBorne.jpeg";
-    this.width = 30;
-    this.height = 40;
+    this.image.src = "./img/SideScroll.jpeg";
+    this.width = 50;
+    this.height = 70;
   }
 
   draw() {
@@ -28,14 +28,33 @@ class Player {
       this.image,
       imageGen,
       imageGen2,
-      33,
-      28,
+      200,
+      230,
       this.position.x,
       this.position.y,
       this.width,
       this.height
     );
   }
+  detectPlayerMove() {
+    if (this.velocity.x > 0 && this.velocity.y > -10) {
+      imageGen = 200;
+      imageGen2 = 0;
+    }
+    if (this.velocity.y > -5) {
+      imageGen = 0;
+      imageGen2 = 250;
+    }
+    if (this.velocity.x < 0) {
+      imageGen = 200;
+      imageGen2 = 250;
+    }
+    if (this.velocity.x === 0) {
+      imageGen = 0;
+      imageGen2 = 0;
+    }
+  }
+
   update() {
     this.detectPlayerMove();
     this.draw();
@@ -43,13 +62,6 @@ class Player {
     this.position.y += this.velocity.y;
     if (this.position.y + this.height + this.velocity.y <= canvas.height)
       this.velocity.y += gravity;
-  }
-
-  detectPlayerMove() {
-    if (this.velocity.x > 0) {
-      imageGen = 20;
-      imageGen2 = 35;
-    }
   }
 }
 
@@ -208,6 +220,7 @@ function animate() {
       player.position.x <= platform.position.x + platform.width
     ) {
       player.velocity.y = 0;
+      jumpCount = 2;
     }
   });
   if (scrollOffset > 2000) {
@@ -218,7 +231,7 @@ function animate() {
   }
 }
 animate();
-
+let jumpCount = 2;
 addEventListener("keydown", ({ keyCode }) => {
   switch (keyCode) {
     case 65:
@@ -230,22 +243,31 @@ addEventListener("keydown", ({ keyCode }) => {
       keys.right.pressed = true;
       break;
     case 87:
-      player.velocity.y -= 8;
-      break;
+      if (jumpCount > 0) {
+        player.velocity.y -= 7;
+
+        break;
+      }
   }
 });
+
 addEventListener("keyup", ({ keyCode }) => {
   switch (keyCode) {
     case 65:
       keys.left.pressed = false;
+
       break;
     case 83:
       break;
     case 68:
       keys.right.pressed = false;
+
       break;
     case 87:
-      player.velocity.y -= 10;
-      break;
+      if (jumpCount > 0) {
+        player.velocity.y -= 7;
+        jumpCount -= 1;
+        break;
+      }
   }
 });
