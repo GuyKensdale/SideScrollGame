@@ -1,14 +1,74 @@
-<style>
-  body {
-    margin: 0;
-    background-color: black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Side Scroller</title>
+    <!-- Your existing CSS and meta tags -->
+    <style>
+      /* Your existing CSS styles */
+      body {
+        margin: 0;
+        background-color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      #game-over-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
 
-<canvas></canvas>
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+      }
 
-<script src="index.js" type="module"></script>
+      #game-over-screen h1 {
+        color: white;
+        font-size: 36px;
+        margin-bottom: 20px;
+      }
+
+      #restart-button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      #level-display {
+  position: absolute;
+  top: 10px;
+  left: 10px; 
+  font-size: 24px;
+  color: white;
+  z-index: 2; 
+}
+
+
+    </style>
+  </head>
+  <body>
+    <canvas></canvas>
+    <div id="level-display">Level: 1</div>
+    
+
+    <div id="game-over-screen" class="hidden">
+      <button id="restart-button" style="display: none">
+        Game Over! <br></br>Play again?
+      </button>
+    </div>
+  
+    <script src="index.js" type="module"></script>
+    
+  
+
+  </body>
+</html>

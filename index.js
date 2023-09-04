@@ -5,6 +5,9 @@ canvas.width = 1024;
 canvas.height = 576;
 let imageGen = 100;
 let imageGen2 = 195;
+const jumpSound = new Audio("./img/jump.mp3");
+const BackgroundMusic = new Audio("./img/8bitbacking.mp3");
+const redCubes = [];
 
 const gravity = 0.9;
 class Player {
@@ -36,8 +39,9 @@ class Player {
       this.height
     );
   }
+
   detectPlayerMove() {
-    if (this.velocity.x > 0 && this.velocity.y > -10) {
+    if (keys.right.pressed && this.velocity.y > -10) {
       imageGen = 200;
       imageGen2 = 0;
     }
@@ -49,7 +53,7 @@ class Player {
       imageGen = 200;
       imageGen2 = 250;
     }
-    if (this.velocity.x === 0) {
+    if (!keys.right.pressed && !keys.left.pressed) {
       imageGen = 0;
       imageGen2 = 0;
     }
@@ -64,10 +68,18 @@ class Player {
       this.velocity.y += gravity;
   }
 }
-
 function GameOver() {
-  console.log("lost");
+  const gameOverScreen = document.getElementById("game-over-screen");
+  gameOverScreen.classList.remove("hidden");
+
+  const restartButton = document.getElementById("restart-button");
+  restartButton.style.display = "block";
+
+  restartButton.addEventListener("click", () => {
+    location.reload();
+  });
 }
+
 class Platform {
   constructor({ x, y, imageUrl }) {
     this.position = {
@@ -110,10 +122,134 @@ class GenericObject {
     );
   }
 }
+class RedCube {
+  constructor({ x, y, speed }) {
+    this.position = { x, y };
+    this.speed = speed; // Speed of the cube
+    this.width = 20; // Adjust as needed
+    this.height = 20; // Adjust as needed
+  }
+
+  update() {
+    this.position.x -= this.speed; // Move the cube
+  }
+
+  draw() {
+    // Draw the red cube at its position
+    c.fillStyle = "red";
+    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+  }
+}
+
+class Wizard {
+  constructor({ x, y, imageUrl }) {
+    this.position = {
+      x,
+      y,
+    };
+    this.image = new Image();
+    this.image.src = imageUrl;
+    this.image.onload = () => {
+      this.loaded = true;
+    };
+    this.width = 110;
+    this.height = 500;
+    this.loaded = false;
+    this.frameIndex = 0;
+    this.framesPerAnimation = 2;
+    this.animationSpeed = 4;
+    this.lastFrameTime = 0;
+    this.lastShootTime = 0;
+    this.shootInterval = 2000;
+    this.startShooting();
+    // Adjust the shoot interval (in milliseconds) as needed
+  }
+  startShooting() {
+    this.shootIntervalId = setInterval(() => {
+      this.shoot();
+    }, this.shootInterval);
+  }
+  draw() {
+    if (this.loaded) {
+      const sourceX = this.frameIndex * this.width;
+      const sourceY = 0;
+
+      c.drawImage(
+        this.image,
+        sourceX,
+        sourceY,
+        this.width,
+        this.height,
+        this.position.x,
+        this.position.y,
+        50, // Width of the displayed image
+        200 // Height of the displayed image
+      );
+    }
+  }
+
+  shoot() {
+    // Create a red cube and add it to an array of red cubes
+    const redCube = new RedCube({
+      x: 1000,
+      y: 500,
+      speed: 6, // Adjust the speed of the cube
+    });
+
+    // Add the red cube to an array for tracking
+    redCubes.push(redCube);
+  }
+
+  updateAnimation() {
+    const currentTimestamp = Date.now();
+    const deltaTime = currentTimestamp - this.lastFrameTime;
+
+    if (deltaTime >= 1000 / this.animationSpeed) {
+      this.frameIndex = (this.frameIndex + 1) % this.framesPerAnimation;
+      this.lastFrameTime = currentTimestamp;
+    }
+  }
+}
+
+function insertRandomWizard() {
+  // Find the last wizard in the array
+  const lastWizard = wizards[wizards.length - 1];
+
+  // Generate a random `x` position between 1000 and 2000 from the last wizard's position
+  const minX = Math.max(1000, lastWizard.position.x - 2000);
+  const maxX = Math.min(2000, lastWizard.position.x + 2000);
+  const randomX = Math.random() * (maxX - minX) + minX;
+
+  // Create a new wizard with the random `x` position and add it to the array
+  const newWizard = new Wizard({
+    x: randomX,
+    y: 480,
+    imageUrl: "./img/Wizards.jpeg",
+  });
+  wizards.push(newWizard);
+}
+setInterval(() => {
+  insertRandomWizard();
+}, 5000); // Insert a new wizard every 5 seconds
+
+const wizards = [
+  new Wizard({ x: 200, y: 480, imageUrl: "./img/Wizards.jpeg" }),
+];
+wizards.forEach((wizard) => {
+  wizard.startShooting();
+});
 const genericObject = [
   new GenericObject({ x: 0, y: 0, imageUrl: "./img/Background.jpeg" }),
   new GenericObject({ x: 2000, y: 0, imageUrl: "./img/Background.jpeg" }),
   new GenericObject({ x: 4000, y: 0, imageUrl: "./img/Background.jpeg" }),
+  new GenericObject({ x: 6000, y: 0, imageUrl: "./img/Night.jpeg" }),
+  new GenericObject({ x: 8000, y: 0, imageUrl: "./img/Night.jpeg" }),
+  new GenericObject({ x: 10000, y: 0, imageUrl: "./img/Night.jpeg" }),
+  new GenericObject({ x: 12000, y: 0, imageUrl: "./img/Background.jpeg" }),
+  new GenericObject({ x: 14000, y: 0, imageUrl: "./img/Background.jpeg" }),
+  new GenericObject({ x: 16000, y: 0, imageUrl: "./img/Night.jpeg" }),
+  new GenericObject({ x: 18000, y: 0, imageUrl: "./img/Night.jpeg" }),
+  new GenericObject({ x: 20000, y: 0, imageUrl: "./img/Night.jpeg" }),
 ];
 
 const player = new Player();
@@ -122,7 +258,7 @@ function mapGen() {
   const platforms = [];
   let prevX = 0;
 
-  for (let i = 0; i <= 50; i++) {
+  for (let i = 0; i <= 1000; i++) {
     let randomGap;
 
     do {
@@ -157,7 +293,7 @@ function mapGen() {
 
 const platforms = [
   new Platform({ x: -1, y: 550, imageUrl: "./img/Platform.jpeg" }),
-  new Platform({ x: 250, y: 550, imageUrl: "./img/Platform.jpeg" }),
+  new Platform({ x: 280, y: 550, imageUrl: "./img/Platform.jpeg" }),
 
   ...mapGen(),
 ];
@@ -180,10 +316,26 @@ function animate() {
   genericObject.forEach((genericObject) => {
     genericObject.draw();
   });
+  redCubes.forEach((redCube) => {
+    redCube.update();
+    redCube.draw();
+
+    // Check for collision with player
+    if (
+      player.position.x < redCube.position.x + redCube.width &&
+      player.position.x + player.width > redCube.position.x &&
+      player.position.y < redCube.position.y + redCube.height &&
+      player.position.y + player.height > redCube.position.y
+    ) {
+      // Collision with player, trigger game over
+      GameOver();
+    }
+  });
   player.update();
   platforms.forEach((platform) => {
     platform.draw();
   });
+
   if (keys.right.pressed && player.position.x < 600) {
     player.velocity.x = 5;
   } else if (
@@ -198,6 +350,9 @@ function animate() {
       platforms.forEach((platform) => {
         platform.position.x -= 5;
       });
+      wizards.forEach((wizard) => {
+        wizard.position.x -= 6;
+      });
       genericObject.forEach((genericObject) => {
         genericObject.position.x -= 2;
       });
@@ -206,11 +361,15 @@ function animate() {
       platforms.forEach((platform) => {
         platform.position.x += 5;
       });
+      wizards.forEach((wizard) => {
+        wizard.position.x += 5;
+      });
       genericObject.forEach((genericObject) => {
         genericObject.position.x += 2;
       });
     }
   }
+
   platforms.forEach((platform) => {
     if (
       player.position.y + player.height <= platform.position.y &&
@@ -223,13 +382,35 @@ function animate() {
       jumpCount = 2;
     }
   });
-  if (scrollOffset > 2000) {
-    console.log("you win");
+
+  wizards.forEach((wizard) => {
+    wizard.updateAnimation();
+    wizard.draw();
+  });
+
+  if (scrollOffset > 400 && scrollOffset < 800) {
+    level = 2;
+    updateLevelDisplay();
+  }
+  if (scrollOffset > 800 && scrollOffset < 1200) {
+    level = 3;
+    updateLevelDisplay();
+  }
+  if (scrollOffset > 1200 && scrollOffset < 2000) {
+    level = 4;
+    updateLevelDisplay();
   }
   if (player.position.y > canvas.height) {
     GameOver();
   }
 }
+let level = 1;
+
+function updateLevelDisplay() {
+  const levelDisplay = document.getElementById("level-display");
+  levelDisplay.textContent = `Level: ${level}`;
+}
+
 animate();
 let jumpCount = 2;
 addEventListener("keydown", ({ keyCode }) => {
@@ -241,6 +422,7 @@ addEventListener("keydown", ({ keyCode }) => {
       break;
     case 68:
       keys.right.pressed = true;
+      BackgroundMusic.play();
       break;
     case 87:
       if (jumpCount > 0) {
